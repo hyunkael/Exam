@@ -1,4 +1,6 @@
 services:
+  # Option 1: Deploy as separate services (recommended for production)
+  
   # CRM Staging Service
   - type: worker
     name: crm-staging-service
@@ -18,6 +20,10 @@ services:
     envVars:
       - key: PYTHON_VERSION
         value: 3.9.0
+    # This service depends on the CRM staging service
+    # It will only start after the CRM service is deployed
+    dependsOn:
+      - crm-staging-service
 
   # Data Warehouse Service
   - type: worker
@@ -28,6 +34,11 @@ services:
     envVars:
       - key: PYTHON_VERSION
         value: 3.9.0
+    # This service depends on both staging services
+    # It will only start after both staging services are deployed
+    dependsOn:
+      - crm-staging-service
+      - erp-staging-service
 
   # Dashboard Web Service
   - type: web
@@ -38,3 +49,19 @@ services:
     envVars:
       - key: PYTHON_VERSION
         value: 3.9.0
+    # This service depends on the data warehouse service
+    # It will only start after the data warehouse service is deployed
+    dependsOn:
+      - data-warehouse-service
+
+  # Option 2: Deploy as a single service (alternative approach)
+  # Uncomment this and comment out the above services if you prefer this approach
+  
+  # - type: web
+  #   name: data-pipeline-all-in-one
+  #   env: python
+  #   buildCommand: pip install -r requirements.txt
+  #   startCommand: python run_all.py
+  #   envVars:
+  #     - key: PYTHON_VERSION
+  #       value: 3.9.0
