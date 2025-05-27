@@ -1,7 +1,7 @@
 import os
 import pandas as pd
 import numpy as np
-from sqlalchemy import create_engine, Column, String, Integer, Float, Date, MetaData, Table
+from sqlalchemy import create_engine, Column, String, Integer, Float, Date, MetaData, Table, text
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from datetime import datetime
@@ -128,14 +128,14 @@ def clean_data():
     try:
         # Standardize gender values
         with engine.connect() as conn:
-            conn.execute("UPDATE erp_customer_demographics SET GEN = 'M' WHERE GEN = 'Male'")
-            conn.execute("UPDATE erp_customer_demographics SET GEN = 'F' WHERE GEN = 'Female'")
+            conn.execute(text("UPDATE erp_customer_demographics SET GEN = 'M' WHERE GEN = 'Male'"))
+            conn.execute(text("UPDATE erp_customer_demographics SET GEN = 'F' WHERE GEN = 'Female'"))
             logger.info("Standardized gender values in customer demographics")
             
         # Ensure maintenance values are standardized to boolean
         with engine.connect() as conn:
-            conn.execute("UPDATE erp_product_categories SET MAINTENANCE = 'true' WHERE MAINTENANCE = 'Yes'")
-            conn.execute("UPDATE erp_product_categories SET MAINTENANCE = 'false' WHERE MAINTENANCE = 'No'")
+            conn.execute(text("UPDATE erp_product_categories SET MAINTENANCE = 'true' WHERE MAINTENANCE = 'Yes'"))
+            conn.execute(text("UPDATE erp_product_categories SET MAINTENANCE = 'false' WHERE MAINTENANCE = 'No'"))
             logger.info("Standardized maintenance values in product categories")
             
     except Exception as e:

@@ -1,7 +1,7 @@
 import os
 import pandas as pd
 import numpy as np
-from sqlalchemy import create_engine, Column, String, Integer, Float, Date, MetaData, Table
+from sqlalchemy import create_engine, Column, String, Integer, Float, Date, MetaData, Table, text
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from datetime import datetime
@@ -146,12 +146,12 @@ def clean_data():
     try:
         # Clean customer info - trim whitespace
         with engine.connect() as conn:
-            conn.execute("UPDATE crm_customer_info SET cst_firstname = TRIM(cst_firstname), cst_lastname = TRIM(cst_lastname)")
+            conn.execute(text("UPDATE crm_customer_info SET cst_firstname = TRIM(cst_firstname), cst_lastname = TRIM(cst_lastname)"))
             logger.info("Cleaned customer info data")
             
         # Handle missing values in product info
         with engine.connect() as conn:
-            conn.execute("UPDATE crm_product_info SET prd_cost = 0 WHERE prd_cost IS NULL")
+            conn.execute(text("UPDATE crm_product_info SET prd_cost = 0 WHERE prd_cost IS NULL"))
             logger.info("Cleaned product info data")
             
     except Exception as e:
