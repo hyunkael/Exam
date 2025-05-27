@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 # Database connections
 CRM_DB_URL = "postgresql://development_va0t_user:7DPz2GrySQ2e2GdtCrPwd1WiUQmJMRLR@dpg-d0q2gvre5dus73eb7600-a.singapore-postgres.render.com/development_va0t"
 ERP_DB_URL = "postgresql://production_unmx_user:WDJB0GjyyQDXkPH7MATl2ITXK2z0EUuY@dpg-d0q2h9re5dus73eb7ftg-a.singapore-postgres.render.com/production_unmx"
-DW_DB_URL = "postgresql://production_unmx_user:WDJB0GjyyQDXkPH7MATl2ITXK2z0EUuY@dpg-d0q2h9re5dus73eb7ftg-a.singapore-postgres.render.com/production_unmx"
+DW_DB_URL = "postgresql://warehouse_0uj2_user:ZD55uP1cyY7p7BWx7KeMek1az3GzL3SI@dpg-d0qmhfidbo4c73c9d2e0-a.singapore-postgres.render.com/warehouse_0uj2"
 
 crm_engine = create_engine(CRM_DB_URL)
 erp_engine = create_engine(ERP_DB_URL)
