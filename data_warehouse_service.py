@@ -98,23 +98,24 @@ def extract_and_transform_data():
         # Transform customer data
         # Prepare customer dimension by joining CRM and ERP data
         # First, extract the customer ID from the ERP CID (remove the 'NASA' prefix)
-        erp_demographics['customer_key'] = erp_demographics['CID'].str.replace('NASA', '')
+        erp_demographics['erp_customer_key'] = erp_demographics['CID'].str.replace('NASA', '')
         
         # Merge with CRM customer data
         dim_customers_df = pd.merge(
             crm_customers,
             erp_demographics,
             left_on='cst_key',
-            right_on='customer_key',
+            right_on='erp_customer_key',
             how='left'
         )
         
         # Merge with location data
-        erp_locations['customer_key'] = erp_locations['CID'].str.replace('-', '')
+        erp_locations['location_customer_key'] = erp_locations['CID'].str.replace('-', '')
         dim_customers_df = pd.merge(
             dim_customers_df,
             erp_locations,
-            on='customer_key',
+            left_on='cst_key',
+            right_on='location_customer_key',
             how='left'
         )
         

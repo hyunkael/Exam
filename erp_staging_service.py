@@ -94,7 +94,8 @@ def load_data():
         # Load customer demographics
         logger.info(f"Loading customer demographics from {SOURCE_DIR}/CUST_AZ12.csv")
         customer_demo_df = pd.read_csv(f"{SOURCE_DIR}/CUST_AZ12.csv")
-        customer_demo_df['BDATE'] = pd.to_datetime(customer_demo_df['BDATE'])
+        # Handle out of bounds dates by setting them to None
+        customer_demo_df['BDATE'] = pd.to_datetime(customer_demo_df['BDATE'], errors='coerce')
         customer_demo_df.to_sql('erp_customer_demographics', engine, if_exists='replace', index=False)
         logger.info(f"Loaded {len(customer_demo_df)} records into erp_customer_demographics")
         

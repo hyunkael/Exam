@@ -123,10 +123,11 @@ def load_data():
         # Load sales details
         logger.info(f"Loading sales details from {SOURCE_DIR}/sales_details.csv")
         sales_df = pd.read_csv(f"{SOURCE_DIR}/sales_details.csv")
-        # Convert date columns from numeric format to datetime
-        sales_df['sls_order_dt'] = pd.to_datetime(sales_df['sls_order_dt'], format='%Y%m%d')
-        sales_df['sls_ship_dt'] = pd.to_datetime(sales_df['sls_ship_dt'], format='%Y%m%d')
-        sales_df['sls_due_dt'] = pd.to_datetime(sales_df['sls_due_dt'], format='%Y%m%d')
+        # Convert date columns from numeric format to datetime with error handling
+        # Handle invalid values by setting them to None
+        sales_df['sls_order_dt'] = pd.to_datetime(sales_df['sls_order_dt'], format='%Y%m%d', errors='coerce')
+        sales_df['sls_ship_dt'] = pd.to_datetime(sales_df['sls_ship_dt'], format='%Y%m%d', errors='coerce')
+        sales_df['sls_due_dt'] = pd.to_datetime(sales_df['sls_due_dt'], format='%Y%m%d', errors='coerce')
         sales_df.to_sql('crm_sales_details', engine, if_exists='replace', index=False)
         logger.info(f"Loaded {len(sales_df)} records into crm_sales_details")
         
