@@ -1,5 +1,6 @@
 import os
 import pandas as pd
+import numpy as np
 from sqlalchemy import create_engine, Column, String, Integer, Float, Date, MetaData, Table
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
@@ -16,8 +17,25 @@ engine = create_engine(DB_URL)
 Base = declarative_base()
 metadata = MetaData()
 
-# Define the source directory
-SOURCE_DIR = "data_engineering_practice-main/source_erp"
+# Define the source directory - try multiple possible locations
+def find_source_dir():
+    possible_paths = [
+        "data_engineering_practice-main/source_erp",  # Original path
+        "source_erp",                              # Direct path
+        "../data_engineering_practice-main/source_erp",  # One level up
+        "./source_erp"                             # Current directory
+    ]
+    
+    for path in possible_paths:
+        if os.path.exists(path):
+            logger.info(f"Found source directory at: {path}")
+            return path
+    
+    # If we get here, we couldn't find the directory
+    logger.error("Could not find source_erp directory. Using default path.")
+    return "source_erp"  # Default to this and let it fail with clear error if needed
+
+SOURCE_DIR = find_source_dir()
 
 def create_tables():
     """Create tables for each CSV file in the ERP folder"""
@@ -59,13 +77,29 @@ def create_tables():
 def load_data():
     """Load data from CSV files into the database tables"""
     try:
+        # Check if we can access the files
+        files_to_check = [
+            f"{SOURCE_DIR}/CUST_AZ12.csv",
+            f"{SOURCE_DIR}/LOC_A101.csv",
+            f"{SOURCE_DIR}/PX_CAT_G1V2.csv"
+        ]
+        
+        for file_path in files_to_check:
+            if not os.path.exists(file_path):
+                logger.error(f"File not found: {file_path}")
+                logger.error(f"Current working directory: {os.getcwd()}")
+                logger.error(f"Directory contents: {os.listdir(os.path.dirname(file_path) if os.path.dirname(file_path) else '.')}")
+                raise FileNotFoundError(f"Could not find {file_path}")
+        
         # Load customer demographics
+        logger.info(f"Loading customer demographics from {SOURCE_DIR}/CUST_AZ12.csv")
         customer_demo_df = pd.read_csv(f"{SOURCE_DIR}/CUST_AZ12.csv")
         customer_demo_df['BDATE'] = pd.to_datetime(customer_demo_df['BDATE'])
         customer_demo_df.to_sql('erp_customer_demographics', engine, if_exists='replace', index=False)
         logger.info(f"Loaded {len(customer_demo_df)} records into erp_customer_demographics")
         
         # Load customer location
+        logger.info(f"Loading customer location from {SOURCE_DIR}/LOC_A101.csv")
         customer_loc_df = pd.read_csv(f"{SOURCE_DIR}/LOC_A101.csv")
         # Clean up CID by removing hyphens to match with other tables
         customer_loc_df['CID'] = customer_loc_df['CID'].str.replace('-', '')
@@ -73,13 +107,20 @@ def load_data():
         logger.info(f"Loaded {len(customer_loc_df)} records into erp_customer_location")
         
         # Load product categories
+        logger.info(f"Loading product categories from {SOURCE_DIR}/PX_CAT_G1V2.csv")
         product_cat_df = pd.read_csv(f"{SOURCE_DIR}/PX_CAT_G1V2.csv")
         product_cat_df.to_sql('erp_product_categories', engine, if_exists='replace', index=False)
         logger.info(f"Loaded {len(product_cat_df)} records into erp_product_categories")
         
+    except FileNotFoundError as e:
+        logger.error(f"File not found error: {e}")
+        logger.error("Please ensure the CSV files are available in the correct location")
+        raise
     except Exception as e:
         logger.error(f"Error loading data: {e}")
         raise
+
+
 
 def clean_data():
     """Clean and transform the data"""

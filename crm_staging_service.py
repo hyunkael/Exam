@@ -1,5 +1,6 @@
 import os
 import pandas as pd
+import numpy as np
 from sqlalchemy import create_engine, Column, String, Integer, Float, Date, MetaData, Table
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
@@ -16,8 +17,25 @@ engine = create_engine(DB_URL)
 Base = declarative_base()
 metadata = MetaData()
 
-# Define the source directory
-SOURCE_DIR = "data_engineering_practice-main/source_crm"
+# Define the source directory - try multiple possible locations
+def find_source_dir():
+    possible_paths = [
+        "data_engineering_practice-main/source_crm",  # Original path
+        "source_crm",                              # Direct path
+        "../data_engineering_practice-main/source_crm",  # One level up
+        "./source_crm"                             # Current directory
+    ]
+    
+    for path in possible_paths:
+        if os.path.exists(path):
+            logger.info(f"Found source directory at: {path}")
+            return path
+    
+    # If we get here, we couldn't find the directory
+    logger.error("Could not find source_crm directory. Using default path.")
+    return "source_crm"  # Default to this and let it fail with clear error if needed
+
+SOURCE_DIR = find_source_dir()
 
 def create_tables():
     """Create tables for each CSV file in the CRM folder"""
@@ -73,13 +91,29 @@ def create_tables():
 def load_data():
     """Load data from CSV files into the database tables"""
     try:
+        # Check if we can access the files
+        files_to_check = [
+            f"{SOURCE_DIR}/cust_info.csv",
+            f"{SOURCE_DIR}/prd_info.csv",
+            f"{SOURCE_DIR}/sales_details.csv"
+        ]
+        
+        for file_path in files_to_check:
+            if not os.path.exists(file_path):
+                logger.error(f"File not found: {file_path}")
+                logger.error(f"Current working directory: {os.getcwd()}")
+                logger.error(f"Directory contents: {os.listdir(os.path.dirname(file_path) if os.path.dirname(file_path) else '.')}")
+                raise FileNotFoundError(f"Could not find {file_path}")
+        
         # Load customer info
+        logger.info(f"Loading customer info from {SOURCE_DIR}/cust_info.csv")
         customer_df = pd.read_csv(f"{SOURCE_DIR}/cust_info.csv")
         customer_df['cst_create_date'] = pd.to_datetime(customer_df['cst_create_date'])
         customer_df.to_sql('crm_customer_info', engine, if_exists='replace', index=False)
         logger.info(f"Loaded {len(customer_df)} records into crm_customer_info")
         
         # Load product info
+        logger.info(f"Loading product info from {SOURCE_DIR}/prd_info.csv")
         product_df = pd.read_csv(f"{SOURCE_DIR}/prd_info.csv")
         product_df['prd_start_dt'] = pd.to_datetime(product_df['prd_start_dt'])
         product_df['prd_end_dt'] = pd.to_datetime(product_df['prd_end_dt'])
@@ -87,6 +121,7 @@ def load_data():
         logger.info(f"Loaded {len(product_df)} records into crm_product_info")
         
         # Load sales details
+        logger.info(f"Loading sales details from {SOURCE_DIR}/sales_details.csv")
         sales_df = pd.read_csv(f"{SOURCE_DIR}/sales_details.csv")
         # Convert date columns from numeric format to datetime
         sales_df['sls_order_dt'] = pd.to_datetime(sales_df['sls_order_dt'], format='%Y%m%d')
@@ -95,9 +130,15 @@ def load_data():
         sales_df.to_sql('crm_sales_details', engine, if_exists='replace', index=False)
         logger.info(f"Loaded {len(sales_df)} records into crm_sales_details")
         
+    except FileNotFoundError as e:
+        logger.error(f"File not found error: {e}")
+        logger.error("Please ensure the CSV files are available in the correct location")
+        raise
     except Exception as e:
         logger.error(f"Error loading data: {e}")
         raise
+
+
 
 def clean_data():
     """Clean and transform the data"""
