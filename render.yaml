@@ -1,0 +1,40 @@
+services:
+  # CRM Staging Service
+  - type: worker
+    name: crm-staging-service
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: python crm_staging_service.py
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.9.0
+
+  # ERP Staging Service
+  - type: worker
+    name: erp-staging-service
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: python erp_staging_service.py
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.9.0
+
+  # Data Warehouse Service
+  - type: worker
+    name: data-warehouse-service
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: python data_warehouse_service.py
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.9.0
+
+  # Dashboard Web Service
+  - type: web
+    name: sales-dashboard
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: streamlit run dashboard.py --server.port $PORT --server.address 0.0.0.0
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.9.0
